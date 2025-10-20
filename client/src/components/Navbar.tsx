@@ -49,30 +49,28 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <Link href="/">
-              <a className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md">
-                <div className="w-8 h-8 bg-primary-foreground rounded-md flex items-center justify-center">
-                  <span className="font-display text-xl font-bold text-primary">C</span>
-                </div>
-                <span className="font-display text-xl font-bold text-primary-foreground hidden sm:inline">
-                  CricketLive
-                </span>
-              </a>
+            <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md">
+              <div className="w-8 h-8 bg-primary-foreground rounded-md flex items-center justify-center">
+                <span className="font-display text-xl font-bold text-primary">C</span>
+              </div>
+              <span className="font-display text-xl font-bold text-primary-foreground hidden sm:inline">
+                CricketLive
+              </span>
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
-                <Link key={link.path} href={link.path}>
-                  <a
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      location === link.path
-                        ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'text-primary-foreground/80 hover-elevate'
-                    }`}
-                    data-testid={`link-nav-${link.label.toLowerCase()}`}
-                  >
-                    {link.label}
-                  </a>
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    location === link.path
+                      ? 'bg-primary-foreground/20 text-primary-foreground'
+                      : 'text-primary-foreground/80 hover-elevate'
+                  }`}
+                  data-testid={`link-nav-${link.label.toLowerCase()}`}
+                >
+                  {link.label}
                 </Link>
               ))}
             </div>
@@ -151,17 +149,17 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-1">
             {navLinks.map((link) => (
-              <Link key={link.path} href={link.path}>
-                <a
-                  className={`block px-4 py-2 rounded-md text-sm font-medium ${
-                    location === link.path
-                      ? 'bg-primary-foreground/20 text-primary-foreground'
-                      : 'text-primary-foreground/80'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.label}
-                </a>
+              <Link
+                key={link.path}
+                href={link.path}
+                className={`block px-4 py-2 rounded-md text-sm font-medium ${
+                  location === link.path
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'text-primary-foreground/80'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
               </Link>
             ))}
           </div>

@@ -32,12 +32,12 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await db().select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
+    const [user] = await db()
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
@@ -56,20 +56,20 @@ export class DatabaseStorage implements IStorage {
     pollData: InsertPoll,
     optionsData: InsertPollOption[]
   ): Promise<Poll> {
-    const [poll] = await db.insert(polls).values(pollData).returning();
+    const [poll] = await db().insert(polls).values(pollData).returning();
 
     const optionsWithPollId = optionsData.map((opt) => ({
       ...opt,
       pollId: poll.id,
     }));
 
-    await db.insert(pollOptions).values(optionsWithPollId);
+    await db().insert(pollOptions).values(optionsWithPollId);
 
     return poll;
   }
 
   async getAllPolls(): Promise<Array<Poll & { options: PollOption[] }>> {
-    const allPolls = await db
+    const allPolls = await db()
       .select()
       .from(polls)
       .where(eq(polls.isActive, true))
@@ -77,7 +77,7 @@ export class DatabaseStorage implements IStorage {
 
     const pollsWithOptions = await Promise.all(
       allPolls.map(async (poll) => {
-        const options = await db
+        const options = await db()
           .select()
           .from(pollOptions)
           .where(eq(pollOptions.pollId, poll.id));
@@ -95,11 +95,11 @@ export class DatabaseStorage implements IStorage {
   async getPollById(
     id: string
   ): Promise<(Poll & { options: PollOption[] }) | undefined> {
-    const [poll] = await db.select().from(polls).where(eq(polls.id, id));
+    const [poll] = await db().select().from(polls).where(eq(polls.id, id));
 
     if (!poll) return undefined;
 
-    const options = await db
+    const options = await db()
       .select()
       .from(pollOptions)
       .where(eq(pollOptions.pollId, id));
@@ -112,7 +112,7 @@ export class DatabaseStorage implements IStorage {
 
   async vote(voteData: InsertPollVote): Promise<void> {
     // Check if user has already voted
-    const existingVote = await db
+    const existingVote = await db()
       .select()
       .from(pollVotes)
       .where(
@@ -127,22 +127,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Record the vote
-    await db.insert(pollVotes).values(voteData);
+    await db().insert(pollVotes).values(voteData);
 
     // Increment the vote count
-    const [option] = await db
+    const [option] = await db()
       .select()
       .from(pollOptions)
       .where(eq(pollOptions.id, voteData.optionId));
 
-    await db
+    await db()
       .update(pollOptions)
       .set({ votes: (option.votes || 0) + 1 })
       .where(eq(pollOptions.id, voteData.optionId));
   }
 
   async hasUserVoted(pollId: string, userId: string): Promise<boolean> {
-    const votes = await db
+    const votes = await db()
       .select()
       .from(pollVotes)
       .where(
