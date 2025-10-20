@@ -2,8 +2,19 @@ import LiveScoreboard from "@/components/LiveScoreboard";
 import CommentaryFeed from "@/components/CommentaryFeed";
 import MatchCard from "@/components/MatchCard";
 import PollCard from "@/components/PollCard";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
+  const { data: allMatches = [] } = useQuery<any[]>({
+    queryKey: ["/api/matches"],
+  });
+
+  const { data: polls = [] } = useQuery<any[]>({
+    queryKey: ["/api/polls"],
+  });
+
+  const liveMatch = allMatches.find((m) => m.status === 'live');
+  const otherMatches = allMatches.filter((m, i) => i < 3 && m.id !== liveMatch?.id).slice(0, 2);
   // Mock data for live match //todo: remove mock functionality
   const mockBatsmen = [
     {
@@ -76,41 +87,6 @@ export default function Home() {
     },
   ];
 
-  const otherMatches = [ //todo: remove mock functionality
-    {
-      id: "2",
-      team1: "England",
-      team2: "Pakistan",
-      team1Score: "178",
-      team2Score: "182/4",
-      team1Overs: "20.0",
-      team2Overs: "18.2",
-      status: "recent" as const,
-      matchInfo: "2nd T20I • Karachi",
-      result: "Pakistan won by 6 wickets",
-    },
-    {
-      id: "3",
-      team1: "South Africa",
-      team2: "New Zealand",
-      status: "upcoming" as const,
-      matchInfo: "1st Test",
-      venue: "Newlands, Cape Town",
-      dateTime: "Tomorrow, 10:00 AM",
-    },
-  ];
-
-  const mockPoll = { //todo: remove mock functionality
-    id: "poll1",
-    question: "Who will win the India vs Australia match?",
-    options: [
-      { id: "opt1", text: "India", votes: 1247 },
-      { id: "opt2", text: "Australia", votes: 892 },
-      { id: "opt3", text: "Tie/No Result", votes: 156 },
-    ],
-    totalVotes: 2295,
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -140,13 +116,28 @@ export default function Home() {
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-4">Other Matches</h2>
               <div className="space-y-4">
-                {otherMatches.map((match) => (
-                  <MatchCard key={match.id} {...match} />
-                ))}
+                {otherMatches.length > 0 ? (
+                  otherMatches.map((match) => (
+                    <MatchCard key={match.id} {...match} />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No other matches available
+                  </p>
+                )}
               </div>
             </div>
 
-            <PollCard {...mockPoll} />
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Fan Poll</h2>
+              {polls.length > 0 ? (
+                <PollCard {...polls[0]} />
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No polls available
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

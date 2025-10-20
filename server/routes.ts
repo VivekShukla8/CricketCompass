@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertPollVoteSchema } from "@shared/schema";
 import { WebSocketServer } from "ws";
+import { getCurrentMatches, transformMatchData } from "./cricketApi";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware
@@ -23,6 +24,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Admin route to seed database with sample polls
+  app.post("/api/admin/seed-polls", async (req, res) => {
+    try {
+      const pollData = [
+        {
+          question: "Who will win the India vs Australia ODI series?",
+          options: ["India", "Australia", "Draw/Tie"],
+        },
+        {
+          question: "Best T20 batsman in the world currently?",
+          options: ["Virat Kohli", "Babar Azam", "Jos Buttler", "Suryakumar Yadav"],
+        },
+        {
+          question: "Which team will win IPL 2025?",
+          options: ["Mumbai Indians", "Chennai Super Kings", "Royal Challengers", "Other"],
+        },
+      ];
+
+      const createdPolls = [];
+      for (const pollItem of pollData) {
+        const poll = await storage.createPoll(
+          { question: pollItem.question },
+          pollItem.options.map((text) => ({ text, pollId: "" }))
+        );
+        createdPolls.push(poll);
+      }
+
+      res.json({ message: "Polls seeded successfully", count: createdPolls.length });
+    } catch (error) {
+      console.error("Error seeding polls:", error);
+      res.status(500).json({ message: "Failed to seed polls" });
     }
   });
 
@@ -133,58 +168,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Matches routes (mock data for now - will integrate with cricket API later)
+  // Matches routes - Fetch real data from Cricket API
   app.get("/api/matches", async (req, res) => {
     try {
       const { status } = req.query;
 
-      // Mock match data - TODO: Replace with cricket API integration
-      const mockMatches = {
-        live: [
-          {
-            id: "1",
-            team1: "India",
-            team2: "Australia",
-            team1Score: "287/6",
-            team2Score: "145/3",
-            team1Overs: "50.0",
-            team2Overs: "28.4",
-            status: "live",
-            matchInfo: "3rd ODI • MCG, Melbourne",
-            result: "Australia need 143 runs in 128 balls",
-          },
-        ],
-        recent: [
-          {
-            id: "3",
-            team1: "England",
-            team2: "Pakistan",
-            team1Score: "178",
-            team2Score: "182/4",
-            team1Overs: "20.0",
-            team2Overs: "18.2",
-            status: "recent",
-            matchInfo: "2nd T20I • Karachi",
-            result: "Pakistan won by 6 wickets",
-          },
-        ],
-        upcoming: [
-          {
-            id: "6",
-            team1: "South Africa",
-            team2: "New Zealand",
-            status: "upcoming",
-            matchInfo: "1st Test",
-            venue: "Newlands, Cape Town",
-            dateTime: "Tomorrow, 10:00 AM",
-          },
-        ],
+      const apiMatches = await getCurrentMatches();
+      const transformedMatches = apiMatches.map(transformMatchData);
+
+      const categorizedMatches = {
+        live: transformedMatches.filter((m) => m.status === 'live'),
+        recent: transformedMatches.filter((m) => m.status === 'recent'),
+        upcoming: transformedMatches.filter((m) => m.status === 'upcoming'),
       };
 
       if (status && typeof status === "string") {
-        res.json(mockMatches[status as keyof typeof mockMatches] || []);
+        res.json(categorizedMatches[status as keyof typeof categorizedMatches] || []);
       } else {
-        res.json(Object.values(mockMatches).flat());
+        res.json(transformedMatches);
       }
     } catch (error) {
       console.error("Error fetching matches:", error);
