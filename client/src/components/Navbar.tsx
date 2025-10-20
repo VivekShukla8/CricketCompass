@@ -1,7 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, Moon, Sun } from "lucide-react";
+import { Menu, User as UserIcon, Moon, Sun, LogIn, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import type { User } from "@shared/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { path: "/", label: "Live" },
@@ -15,6 +24,8 @@ export default function Navbar() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const typedUser = user as User | undefined;
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -31,7 +42,6 @@ export default function Navbar() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
-    console.log(`Dark mode ${newMode ? 'enabled' : 'disabled'}`);
   };
 
   return (
@@ -79,14 +89,52 @@ export default function Navbar() {
               {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
 
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-primary-foreground hover:bg-primary-foreground/20"
-              data-testid="button-user-menu"
-            >
-              <User className="h-5 w-5" />
-            </Button>
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-primary-foreground hover:bg-primary-foreground/20"
+                        data-testid="button-user-menu"
+                      >
+                        <UserIcon className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="px-2 py-1.5">
+                        <p className="text-sm font-medium text-foreground">
+                          {typedUser?.firstName || typedUser?.email || 'User'}
+                        </p>
+                        {typedUser?.email && (
+                          <p className="text-xs text-muted-foreground">{typedUser.email}</p>
+                        )}
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <a href="/api/logout" className="cursor-pointer">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Log out</span>
+                        </a>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-primary-foreground hover:bg-primary-foreground/20"
+                    onClick={() => window.location.href = '/api/login'}
+                    data-testid="button-login"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Log in</span>
+                  </Button>
+                )}
+              </>
+            )}
 
             <Button
               size="icon"
