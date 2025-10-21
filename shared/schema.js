@@ -35,8 +35,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+// TypeScript helper types removed for JS build
 
 // Polls table
 export const polls = pgTable("polls", {
@@ -51,8 +50,7 @@ export const insertPollSchema = createInsertSchema(polls).omit({
   createdAt: true,
 });
 
-export type InsertPoll = z.infer<typeof insertPollSchema>;
-export type Poll = typeof polls.$inferSelect;
+// TypeScript helper types removed for JS build
 
 // Poll options table
 export const pollOptions = pgTable("poll_options", {
@@ -69,8 +67,7 @@ export const insertPollOptionSchema = createInsertSchema(pollOptions).omit({
   votes: true,
 });
 
-export type InsertPollOption = z.infer<typeof insertPollOptionSchema>;
-export type PollOption = typeof pollOptions.$inferSelect;
+// TypeScript helper types removed for JS build
 
 // Poll votes tracking (to prevent duplicate votes)
 export const pollVotes = pgTable(
@@ -99,5 +96,4 @@ export const insertPollVoteSchema = createInsertSchema(pollVotes).omit({
   votedAt: true,
 });
 
-export type InsertPollVote = z.infer<typeof insertPollVoteSchema>;
-export type PollVote = typeof pollVotes.$inferSelect;
+// TypeScript helper types removed for JS build

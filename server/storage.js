@@ -4,39 +4,17 @@ import {
   polls,
   pollOptions,
   pollVotes,
-  type User,
-  type UpsertUser,
-  type Poll,
-  type InsertPoll,
-  type PollOption,
-  type InsertPollOption,
-  type PollVote,
-  type InsertPollVote,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
-
-export interface IStorage {
-  // User operations - Required for Replit Auth
-  getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
-
-  // Poll operations
-  createPoll(poll: InsertPoll, options: InsertPollOption[]): Promise<Poll>;
-  getAllPolls(): Promise<Array<Poll & { options: PollOption[] }>>;
-  getPollById(id: string): Promise<(Poll & { options: PollOption[] }) | undefined>;
-  vote(vote: InsertPollVote): Promise<void>;
-  hasUserVoted(pollId: string, userId: string): Promise<boolean>;
-}
-
-export class DatabaseStorage implements IStorage {
+export class DatabaseStorage {
   // User operations
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id) {
     const [user] = await db().select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  async upsertUser(userData) {
     const [user] = await db()
       .insert(users)
       .values(userData)
@@ -52,10 +30,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Poll operations
-  async createPoll(
-    pollData: InsertPoll,
-    optionsData: InsertPollOption[]
-  ): Promise<Poll> {
+  async createPoll(pollData, optionsData) {
     const [poll] = await db().insert(polls).values(pollData).returning();
 
     const optionsWithPollId = optionsData.map((opt) => ({
@@ -68,7 +43,7 @@ export class DatabaseStorage implements IStorage {
     return poll;
   }
 
-  async getAllPolls(): Promise<Array<Poll & { options: PollOption[] }>> {
+  async getAllPolls() {
     const allPolls = await db()
       .select()
       .from(polls)
@@ -92,9 +67,7 @@ export class DatabaseStorage implements IStorage {
     return pollsWithOptions;
   }
 
-  async getPollById(
-    id: string
-  ): Promise<(Poll & { options: PollOption[] }) | undefined> {
+  async getPollById(id) {
     const [poll] = await db().select().from(polls).where(eq(polls.id, id));
 
     if (!poll) return undefined;
@@ -110,7 +83,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async vote(voteData: InsertPollVote): Promise<void> {
+  async vote(voteData) {
     // Check if user has already voted
     const existingVote = await db()
       .select()
@@ -141,7 +114,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(pollOptions.id, voteData.optionId));
   }
 
-  async hasUserVoted(pollId: string, userId: string): Promise<boolean> {
+  async hasUserVoted(pollId, userId) {
     const votes = await db()
       .select()
       .from(pollVotes)
