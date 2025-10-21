@@ -5,10 +5,10 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-let pool: Pool | null = null;
-let db: ReturnType<typeof drizzle> | null = null;
+let pool = null;
+let db = null;
 
-function getPool(): Pool {
+function getPool() {
   if (!pool) {
     if (!process.env.DATABASE_URL) {
       throw new Error(

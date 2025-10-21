@@ -1,45 +1,7 @@
 const CRICKET_API_KEY = process.env.CRICKET_API_KEY;
 const BASE_URL = "https://api.cricapi.com/v1";
 
-interface CricketApiResponse<T> {
-  apikey: string;
-  data: T;
-  status: string;
-  info?: {
-    hitsToday: number;
-    hitsLimit: number;
-  };
-}
-
-export interface ApiMatch {
-  id: string;
-  name: string;
-  matchType: string;
-  status: string;
-  venue: string;
-  date: string;
-  dateTimeGMT: string;
-  teams: string[];
-  teamInfo?: Array<{
-    name: string;
-    shortname: string;
-    img: string;
-  }>;
-  score?: Array<{
-    r: number;
-    w: number;
-    o: number;
-    inning: string;
-  }>;
-  series_id?: string;
-  fantasyEnabled?: boolean;
-  bbbEnabled?: boolean;
-  hasSquad?: boolean;
-  matchStarted?: boolean;
-  matchEnded?: boolean;
-}
-
-async function fetchFromCricketApi<T>(endpoint: string): Promise<T> {
+async function fetchFromCricketApi(endpoint) {
   if (!CRICKET_API_KEY) {
     throw new Error("CRICKET_API_KEY is not configured");
   }
@@ -52,7 +14,7 @@ async function fetchFromCricketApi<T>(endpoint: string): Promise<T> {
     throw new Error(`Cricket API error: ${response.statusText}`);
   }
 
-  const result: CricketApiResponse<T> = await response.json();
+  const result = await response.json();
   
   if (result.status !== "success") {
     throw new Error("Cricket API returned unsuccessful status");
@@ -63,7 +25,7 @@ async function fetchFromCricketApi<T>(endpoint: string): Promise<T> {
 
 export async function getCurrentMatches() {
   try {
-    const data = await fetchFromCricketApi<ApiMatch[]>("currentMatches");
+    const data = await fetchFromCricketApi("currentMatches");
     return data || [];
   } catch (error) {
     console.error("Error fetching current matches:", error);
@@ -71,9 +33,9 @@ export async function getCurrentMatches() {
   }
 }
 
-export async function getMatchInfo(matchId: string) {
+export async function getMatchInfo(matchId) {
   try {
-    const data = await fetchFromCricketApi<any>(`match_info?id=${matchId}`);
+    const data = await fetchFromCricketApi(`match_info?id=${matchId}`);
     return data;
   } catch (error) {
     console.error(`Error fetching match info for ${matchId}:`, error);
@@ -81,9 +43,9 @@ export async function getMatchInfo(matchId: string) {
   }
 }
 
-export async function getMatchScore(matchId: string) {
+export async function getMatchScore(matchId) {
   try {
-    const data = await fetchFromCricketApi<any>(`match_scorecard?id=${matchId}`);
+    const data = await fetchFromCricketApi(`match_scorecard?id=${matchId}`);
     return data;
   } catch (error) {
     console.error(`Error fetching match score for ${matchId}:`, error);
@@ -91,12 +53,12 @@ export async function getMatchScore(matchId: string) {
   }
 }
 
-export function transformMatchData(apiMatch: ApiMatch) {
+export function transformMatchData(apiMatch) {
   const isLive = apiMatch.matchStarted && !apiMatch.matchEnded;
   const isRecent = apiMatch.matchEnded;
   const isUpcoming = !apiMatch.matchStarted;
 
-  let status: 'live' | 'recent' | 'upcoming' = 'upcoming';
+  let status = 'upcoming';
   if (isLive) status = 'live';
   else if (isRecent) status = 'recent';
 
